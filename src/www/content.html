@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="/chathost/images/favicon-relaytrust.png">
+
+    <title>RelayTrust: The Well Dashboard</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="public/bootstrap.min.css" rel="stylesheet">
+	<link type="text/css" rel="stylesheet" href="public/jsgrid.min.css" />
+	<link type="text/css" rel="stylesheet" href="public/jsgrid-theme.min.css" />
+    <link rel="stylesheet" type="text/css" class="ui" href="public/semantic/semantic.min.css">
+    <link rel="stylesheet" type="text/css" class="ui" href="public/datatables.css">
+ 	<link href="public/flat-ui.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="public/jumbotron.css" rel="stylesheet">
+	<link href="public/dashboard.css" rel="stylesheet">
+    <style>
+    # {
+    	display: none;
+	}
+    </style>
+  </head>
+  <body>
+
+    <nav id="navMain" class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    </div>
+
+    </nav>
+
+
+    <!main id="main-content" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+    <main id="main-content" class="col-md-12">
+
+      <div class="Ajumbotron">
+      
+
+                    <div class="ui container" id="reports">
+						<div class="section-summary" class="sectionReports">
+							<div class="ui top attached borderless menu">
+								<div class="item">
+									<div class="ui header small">
+										<i class="info circle icon"></i>
+											<div class="content">
+												Select Device Content
+												<div class="sub header">
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						<div class="ui bottom attached segment">
+							<h6>Available Packages</h6>
+								This contains the courses and most recent content packages in the BoltCMS content manager.  More content may be available in Bolt.
+							<div id="pending">
+								<table id="pendingGrid" class="display" width="100%"></table>
+							</div>
+							<div class="content" id="deliverRegion" style="display:none;">
+								<h6>Deliver Package To This Device</h6>
+								Selected Device: <span id="boxid"></span><BR>
+								<span style="display:none;" id="method"></span>
+								Content Type: <span id="type"></span><BR>
+								Selected Package: <span id="package">None</span>
+							</div>
+								<BR>
+								<button id="button" style="display:none;" onclick="saveSetting();" class="btn btn-sm btn-info">Send Package To Device</button>
+
+						</div>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+      </div>
+
+
+
+   </main>
+
+    <footer>
+      <p>&copy; Relay Trust, 2021</p>
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="public/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script>
+	<script type="text/javascript" src="public/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="public/jsgrid.min.js"></script>
+	<script type="text/javascript" src="public/bootstrap.min.js"></script>
+    <script type="text/javascript" src="public/semantic/semantic.min.js"></script>
+    <script type="text/javascript" src="public/angular-min.js"></script>
+	<script type="text/javascript" src="public/flat-ui.js"></script>
+    <script type="text/javascript" src="public/datatables.js"></script>
+    <script type="text/javascript" src="public/moment.js"></script>
+    <script type="text/javascript" src="public/navigation.js"></script>
+
+
+<script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+	var boxid = getQueryVariable('id');
+
+	//getAndCombineContent();
+	loadDataTable();
+	//loadBoxInfo();
+
+async function getAndCombineContent() {
+	var bolt = await getDataFromAPI('/chathost/admin/boltURL');
+	var data = await getDataFromAPI(bolt.url + '/exporter/api/files.json');
+	var packageLatest = {};
+	var packageArray = [];
+	for (var package of data) {
+		console.log(package);
+		package.type = "Content";
+		package.filepath = package.filepath.replace('http://','https://');
+		package.unique = package.package;
+		if (package.is_slim) {
+			package.type = "Content-Slim";
+			package.unique = `${package.package}-slim`;
+		}
+		else {
+			continue;
+		}
+		console.log(package);
+		if (!packageLatest[package.unique]) {
+			packageArray.push(package);
+			packageLatest[package.unique] = true;
+		}
+	}
+	var data = await getDataFromAPI(bolt.url + '/content-api/courses.json');
+	var packageLatest = {};
+	for (var package of data) {
+		console.log(package);
+		package.type = "Moodle";
+		package.filepath = package.filepath.replace('http://','https://');
+		package.package = package.title;
+		package.unique = package.title;
+		console.log(package);
+		if (!packageLatest[package.unique]) {
+			packageArray.push(package);
+			packageLatest[package.unique] = true;
+		}
+	}
+	return (packageArray);
+}
+
+async function getDataFromAPI(url) {
+    let promise = new Promise((resolve, reject) => {
+		$.getJSON(url, function(data){
+			console.log(data);
+			resolve(data);
+		});
+	});
+    let result = await promise;
+    return result;
+}
+
+function loadBoxInfo() {
+			$.ajax({
+				url: `/chathost/admin/roster/${boxid}`,
+		  		method: 'GET',
+				success: function(response) {
+					console.log(response);
+					//console.log ("getResponse=" + response);
+					$("#boxname").text(response[0].sitename);
+					$("#boxid").text(boxid);
+				}
+			});
+
+}
+		function selectPackage(url,type,method) {
+			console.log(`selecting: ${type}: ${url}`);
+
+			$("#boxid").text(boxid);
+			$("#type").text(type);
+			$("#method").text(method);
+			$("#package").text(url);
+			$("#button").show();
+			$("#deliverRegion").show();
+		}
+
+		function saveSetting() {
+			var data = {
+				key: $('#method').text(),
+				value: $('#package').text()
+			};
+			console.log(data);
+			$.ajax({
+				url: `/chathost/admin/settings/${boxid}`,
+		  		method: 'POST',
+				data: JSON.stringify(data),
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function(response) {
+					//console.log ("getResponse=" + response);
+					alert("Success! ");
+					location.replace(`settings.html?id=${boxid}`);
+				},
+				error: function(response) {
+					//console.log ("getResponse=" + response);
+					alert("Setting Failed");
+				}
+			});
+
+		}
+
+async function loadDataTable() {
+	console.log('loadDataTable: Start');
+	packageArray = await getAndCombineContent();
+	packageArray.sort((a, b) => (a.package > b.package) ? 1 : -1)
+	var columns = [
+		{ title: "Type", field: "type" },
+		{ title: "Package", field: "package" },
+		{ title: "Actions", field: "action"}
+	];
+
+	var final = [];
+	for (var item of packageArray) {
+		var fitem = [];
+		item.date = moment(item.timestamp * 1000).format('LLL');
+		item.action = `<a href="#" onclick="copy('${item.filepath}')" data-toggle="tooltip" data-placement="top" title="Copy Content URL"><i class="copy icon"></i></a>&nbsp;&nbsp;`;
+		item.action += `<a href="${item.filepath.replace('slim_','')}" download  data-toggle="tooltip" data-placement="top" title="Download Content"><i class="download icon"></i></a>&nbsp;&nbsp;`;
+		if (boxid && item.type === 'Content-Slim') {
+			item.action += `<a href="#" onclick="selectPackage('${item.filepath}','${item.type}','openwelldownload')" data-toggle="tooltip" data-placement="top" title="Upload To Box"><i class="share square icon"></i></a>`;
+			item.action += `<a href="#" onclick="selectPackage('${window.location.origin}/chathost/link/openwell?packageName=${encodeURIComponent(item.package)}','${item.type}','subscribe')" data-toggle="tooltip" data-placement="top" title="Subscribe To Content"><i class="rss icon"></i></a>`;
+		}
+		else if (boxid && item.type === 'Moodle'){
+			item.action += `<a href="#" onclick="selectPackage('${item.filepath}','${item.type}','coursedownload')" data-toggle="tooltip" data-placement="top" title="Restore Course on Box"><i class="share square icon"></i></a>`;
+		}
+		for (var col of columns) {
+			fitem.push(item[col.field] || '');
+		}
+		final.push(fitem);
+	}
+
+	$('#pendingGrid').DataTable( {
+		data: final,
+		columns: columns
+	});
+}
+
+function getQueryVariable(variable) {
+    var query = window.location.search.substring(1);
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+        if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1]);
+        }
+    }
+    console.log('Query variable %s not found', variable);
+}
+
+function copy(input) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(input).then(() => {
+      alert('Copied To Clipboard');
+      console.log('Copied to clipboard successfully:' + input);
+    }, (err) => {
+      console.log('Failed to copy the text to clipboard.', err);
+    });
+  } else if (window.clipboardData) {
+    window.clipboardData.setData("Text", input);
+  }
+}
+</script>
+
+  </body>
+</html>

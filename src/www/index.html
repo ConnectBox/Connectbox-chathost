@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="/chathost/images/favicon-relaytrust.png">
+
+    <title>RelayTrust: The Well Dashboard</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="public/bootstrap.min.css" rel="stylesheet">
+	<link type="text/css" rel="stylesheet" href="public/jsgrid.min.css" />
+	<link type="text/css" rel="stylesheet" href="public/jsgrid-theme.min.css" />
+    <link rel="stylesheet" type="text/css" class="ui" href="public/semantic/semantic.min.css">
+    <link rel="stylesheet" type="text/css" class="ui" href="public/datatables.css">
+ 	<link href="public/flat-ui.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="public/jumbotron.css" rel="stylesheet">
+	<link href="public/dashboard.css" rel="stylesheet">
+    <style>
+    # {
+    	display: none;
+	}
+    </style>
+  </head>
+  <body>
+
+    <nav id="navMain" class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+
+    </nav>
+
+
+    <!main id="main-content" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+    <main id="main-content" class="col-md-12">
+
+      <div class="Ajumbotron">
+      
+						<div class="section-summary" class="sectionReports">
+							<div class="ui top attached borderless menu">
+								<div class="item">
+									<div class="ui header small">
+										<i class="clone icon"></i>
+											<div class="content">
+												Box Inventory
+												<div class="sub header">
+													
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						<div class="ui bottom attached segment">
+
+							<table id="statusGrid" class="display" width="100%"></table>
+
+						</div>
+
+						<div class="section-summary" class="sectionReports">
+							<div class="ui top attached borderless menu">
+								<div class="item">
+									<div class="ui header small">
+										<i class="info circle icon"></i>
+											<div class="content">
+												System Health
+												<div class="sub header">
+													
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						<div class="ui bottom attached segment">
+							Docker: <font id="stat-docker"></font><BR>
+							Rocketchat: <font id="stat-rocketchat"></font><BR>
+							Chathost: <font id="stat-chathost"></font><BR>
+							MongoDB: <font id="stat-mongo"></font><BR>
+							Bolt: <font id="stat-bolt"></font><BR>
+							CPU Used: <font id="stat-cpu"></font><BR>
+							Memory Used: <font id="stat-memory"></font><BR>
+							Disk Used: <font id="stat-disk"></font><BR>
+							Last Updated: <font id="stat-updated"></font><BR>
+						</div>
+
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+      </div>
+
+ 
+   </main>
+
+    <footer>
+      <p>&copy; Relay Trust, 2021</p>
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="public/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script>
+	<script type="text/javascript" src="public/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="public/jsgrid.min.js"></script>    	
+	<script type="text/javascript" src="public/bootstrap.min.js"></script>
+    <script type="text/javascript" src="public/semantic/semantic.min.js"></script>
+    <script type="text/javascript" src="public/angular-min.js"></script>
+    <script type="text/javascript" src="public/angular-chart-min.js"></script>
+	<script type="text/javascript" src="public/flat-ui.js"></script>
+    <script type="text/javascript" src="public/chart.js"></script>
+    <script type="text/javascript" src="public/datatables.js"></script>
+    <script type="text/javascript" src="public/moment.js"></script>
+    <script type="text/javascript" src="public/navigation.js"></script>
+
+
+<script>
+
+	$.getJSON( "/chathost/admin/boxes", function( data ) {
+		console.log(data)
+		
+		var columns = [
+            { title: "Site Name", field: "sitenameWithDetails" },
+            { title: "Boxid", field: "boxid"},
+            { title: "CTS", field: "cts"},            
+            { title: "Site Admin", field: "siteadmin_name"},      
+            { title: "Last Sync", field: "date" }            
+        ];
+		
+		
+		
+		var final = [];
+		for (var item of data) {
+			var fitem = [];
+			if (item.sitename === 'UNAUTHORIZED') {
+				item.sitenameWithDetails = `<a href="/dashboard/security.html?id=${item.boxid}">${item.sitename}</a>`;		
+			}
+			else if (item.sitename === '') {
+				item.sitenameWithDetails = `<a href="/dashboard/box.html?id=${item.boxid}">(Name Not Configured)</a>`;
+			}
+			else {
+				item.sitenameWithDetails = `<a href="/dashboard/box.html?id=${item.boxid}">${item.sitename}</a>`;
+			}
+			item.date = moment(item.timestamp * 1000).format('LLL');
+			item.cts = `${item.courses}-${item.teachers}-${item.students}`;
+			for (var col of columns) {
+				fitem.push(item[col.field] || '');
+			}
+			final.push(fitem);
+		}
+		
+		$('#statusGrid').DataTable( {
+			data: final,
+			columns: columns
+		});
+
+	});
+
+// LOADING System
+    $.getJSON( "/chathost/admin/system", function( data ) {
+    	data.updated = moment(data.timestamp * 1000).format('LLL');
+		for (var key of Object.keys(data)) {
+			console.log(key);
+			if (data[key] === true) {
+				data[key] = "Up";
+			}
+			else if (data[key] === false) {
+				data[key] = "Down";
+			}
+			$('#stat-' + key).text(data[key]);
+		}
+    });
+
+
+	function loadSecurity(boxid) {
+		location.href = `/dashboard/security.html?id=${boxid}`;
+	}
+	function loadBox(boxid) {
+		location.href = `/dashboard/box.html?id=${boxid}`;	
+	}
+
+
+
+</script>
+
+  </body>
+</html>

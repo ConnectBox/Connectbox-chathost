@@ -47,7 +47,6 @@ services:
     command: [ 'node', 'index.js' ]
     depends_on:
       - mongo
-      - rocketchat
     logging:
       driver: json-file
       options:

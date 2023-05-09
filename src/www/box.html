@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="/chathost/images/favicon-relaytrust.png">
+    <link rel="icon" href="/chathost/images/favicon-connectbox.png">
 
-    <title>RelayTrust: The Well Dashboard</title>
+    <title>Connectbox Dashboard</title>
 
     <!-- Bootstrap core CSS -->
     <link href="public/bootstrap.min.css" rel="stylesheet">
@@ -86,7 +86,6 @@
 				<div class="col-md-4">
 				<h4>Box Functions	</h4>
 
-                <a id="hrefcourses"><i class="eye icon"></i> View Moodle Courses</a><BR>
 				<a id="hrefsettings"><i class="settings icon"></i> Update Settings</a><BR>
 				<a id="hrefopenwell"><i class="download icon"></i> Select Content</a><BR>
 				<a id="hreflogs"><i class="info icon"></i> View Content Logs</a><BR>
@@ -104,7 +103,7 @@
    </main>
 
     <footer>
-      <p>&copy; Relay Trust, 2021</p>
+      <p>&copy; Connectbox 2023 based on Relay Trust, 2021</p>
     </footer>
 
     <!-- Bootstrap core JavaScript
@@ -140,9 +139,6 @@ loadDetails(boxid);
 			boxData = data[0] || {};
 			$(".instanceName").text(boxData.sitename || 'Unnamed');
 			$("#boxid").text(id);
-			if (boxData.notMoodle) {
-				$("#hrefcourses").hide();
-			}
 			$("#hrefcourses").attr('href',`courses.html?id=${id}`);
 			$("#hrefsettings").attr('href',`settings.html?id=${id}`);
 			$("#hreflogs").attr('href',`logs.html?id=${id}`);

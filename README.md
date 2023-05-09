@@ -1,12 +1,11 @@
 # chathost
-Comprehensive Partner Support Services For The Well.  Ansible playbook for AWS EC2.
+Comprehensive Partner Support Services For Connectbox.  Ansible playbook for AWS EC2.
 
-This project is related to The Well, a raspberry pi based platform for Moodle class delivery.
+This project is related to Connectbox, a content delivery device
 
 # Components
-* Rocketchat
-* MongoDB for Rocketchat and Chathost APIs
-* Chathost APIs (Developer Info: https://github.com/RT-coding-team/chathost/tree/main/src)
+* Dashboard with APIs (Developer Info: https://github.com/connectbox/chathost/tree/main/src)
+* MongoDB for Dasboard
 * nginx for Rocket, Chathost APIs
 * BoltCMS for content management
 

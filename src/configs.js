@@ -3,10 +3,7 @@ var configs = {
 	"logging":"console",
 	"port":2820,
 	"mongo": "mongodb://mongo:27017",
-	"rocketchat": 'https://chat.thewellcloud.cloud',
-	"rocketchatadmin": "admin",
-	"rocketchatpassword": "!1TheWell",
-	"bolt": "https://bolt.thewellcloud.cloud"
+	"bolt": "https://bolt.connectbox.org"
 };
 
 const

@@ -73,7 +73,7 @@ webapp.get('/chathost/auth', function getAuth(req, res) {
 	}
 });
 webapp.post('/chathost/auth', async function postAuth(req,res) {
-	var result = await rocketchat.getLogin(req.body.username,req.body.password);
+	var result = {username: req.body.username};
 	if (req.headers.host === 'localhost:2820'){
 		req.session.username = req.body.username;
 		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: POSTMAN TESTS ${req.body.username} authorized`);
@@ -145,10 +145,7 @@ webapp.use(async function (req, res, next) {
 });
 
 // System Sync Functions for Well Box
-webapp.use('/chathost/messageStatus', require('./routes/messageStatus.js'));
 webapp.use('/chathost/courseRosters', require('./routes/courseRosters.js'));
-webapp.use('/chathost/messages', require('./routes/messages.js'));
-webapp.use('/chathost/attachments', require('./routes/attachments.js'));
 webapp.use('/chathost/logs', require('./routes/logs.js'));
 webapp.use('/chathost/settings', require('./routes/settings.js'));
 

@@ -479,6 +479,78 @@ function deleteSecurity(boxid) {
 	}); 
 }
 
+async function getUsers() {
+    let promise = new Promise((resolve, reject) => {
+		const collection = db.collection('users');
+		collection.find({}).toArray(function(err, results) {
+			if (results) {
+				response = results.map(function(value) {
+					return value.username;
+				});
+				resolve(response);
+			}
+			else {
+				resolve([]);
+			}
+		});
+	});
+    let result = await promise;
+    return result;	
+}
+
+async function getUserAuth(username,password) {
+    let promise = new Promise((resolve, reject) => {
+		const collection = db.collection('users');
+		collection.find({_id:username,password:password}).toArray(function(err, results) {
+			if (results && results[0] && results[0].timestamp ) {
+				resolve(true);
+			}
+			else {
+				resolve(false);
+			}
+		});
+	});
+    let result = await promise;
+    return result;	
+
+}
+
+async function putUser(data) {
+    let promise = new Promise((resolve, reject) => {
+		const collection = db.collection('users');
+		collection.insertOne({_id: data.username,username:data.username,password: data.password,timestamp: moment().unix()}, function(err, result) {
+			if (err) {
+				logger.log('error', `putUser: Error: ${data.username}: ${err}`);
+				resolve(false)
+			}
+			else {
+				resolve(true)
+			}
+		});
+	});
+    let result = await promise;
+    return result;	
+}
+
+async function deleteUser(username) {
+    let promise = new Promise((resolve, reject) => {
+		const collection = db.collection('users');
+		console.log(`deleteUser: ${username}`);
+		collection.deleteMany({"_id": username}, function(err,result) {
+			if (err) {
+				logger.log('error', `putUser: Error: ${data.username}: ${err}`);
+				resolve(false)
+			}
+			else {
+				resolve(true)
+			}
+		
+		}); 
+	});
+    let result = await promise;
+    return result;	
+}
+
 
 async function getBoxInventory() {
 	// Gets all boxes active in last 90 days
@@ -544,6 +616,10 @@ module.exports = {
 	getSecurity,
 	putSecurity,
 	deleteSecurity,
+	getUsers,
+	getUserAuth,
+	putUser,
+	deleteUser,
 	deleteCourseRoster,
 	getBoxInventory,
 	status

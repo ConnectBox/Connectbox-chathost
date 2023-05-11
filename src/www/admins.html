@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="/chathost/images/favicon-connectbox.png">
+
+    <title>Connectbox Dashboard</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="public/bootstrap.min.css" rel="stylesheet">
+	<link type="text/css" rel="stylesheet" href="public/jsgrid.min.css" />
+	<link type="text/css" rel="stylesheet" href="public/jsgrid-theme.min.css" />
+    <link rel="stylesheet" type="text/css" class="ui" href="public/semantic/semantic.min.css">
+    <link rel="stylesheet" type="text/css" class="ui" href="public/datatables.css">
+    <link rel="stylesheet" type="text/css" class="ui" href="public/bootstrap.css">
+ 	<link href="public/flat-ui.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="public/jumbotron.css" rel="stylesheet">
+	<link href="public/dashboard.css" rel="stylesheet">
+    <style>
+    # {
+    	display: none;
+	}
+    </style>
+  </head>
+  <body>
+
+    <nav id="navMain" class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    </nav>
+
+
+    <!main id="main-content" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+    <main id="main-content" class="col-md-12">
+
+      <div class="Ajumbotron">
+      
+      <h2>System Administrators</h2>
+
+
+
+
+						
+		<div id="adminTableRegion" class="ui bottom attached segment">
+			<div class="content">
+				Current System Administrators
+			</div>
+			<table class="table">
+			  <thead>
+				<tr>
+				  <th scope="col">#</th>
+				  <th scope="col">Username</th>
+				  <th scope="col">Action</th>
+				</tr>
+			  </thead>
+			  <tbody id="adminTable">
+			  </tbody>
+			</table>
+		</div>
+
+		<div id="buttonRegion">
+			<button type="button" id="createButton" class="btn btn-info" onclick="openCreateUserRegion()">Add User</button>
+		</div>
+		
+		<div id="createUserRegion" style="display:none;">
+			<div id="createUserMessage">
+				Create a New User: <BR>
+				<input class="form-control" placeholder="username" id="createUserEmail"><BR>
+				<input class="form-control" placeholder="password" id="createUserPassword"><BR>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-info" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-danger" onclick="createUser();">Create</button>
+			</div>
+		
+		</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="modal fade">
+	<div class="modal-dialog modal-confirm">
+		<div class="modal-content">
+			<div class="modal-header">
+				<div class="icon-box">
+					<i class="huge exclamation circle icon"></i>
+				</div>
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			</div>
+			<div class="modal-body text-center">
+				<h4>Ooops!</h4>	
+				<p>Something went wrong. We couldn't find that account to delete.</p>
+				<button class="btn btn-success" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modal fade">
+	<div class="modal-dialog modal-confirm">
+		<div class="modal-content">
+			<div class="modal-header">
+				<div class="icon-box">
+					<i class="huge question circle icon"></i>
+				</div>				
+				<h4 class="modal-title">Are you sure?</h4>	
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			</div>
+			<div class="modal-body">
+				<p>Do you really want to permanently delete <span id="showEmail"></span>? This process cannot be undone.</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-info" data-dismiss="modal">Cancel</button>
+		div>
+</div>  
+
+<!-- Confirmation Modal -->
+<div id="createModal" class="modal fade">
+	<div class="modal-dialog modal-confirm">
+		<div class="modal-content">
+			<div class="modal-header">
+				<div class="icon-box">
+					<i class="huge question circle icon"></i>
+				</div>				
+				<h4 class="modal-title">Create New User</h4>	
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			</div>
+		</div>
+	</div>
+</div>  
+
+ 
+   </main>
+
+    <footer>
+      <p>&copy; Connectbox 2023 based on Relay Trust, 2021</p>
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="public/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
+	<script type="text/javascript" src="public/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="public/bootstrap.min.js"></script>
+    <script type="text/javascript" src="public/semantic/semantic.min.js"></script>
+    <script type="text/javascript" src="public/angular-min.js"></script>
+	<script type="text/javascript" src="public/flat-ui.js"></script>
+    <script type="text/javascript" src="public/moment.js"></script>
+    <script type="text/javascript" src="public/datatables.js"></script>
+    <script type="text/javascript" src="public/navigation.js"></script>
+
+
+
+ 
+   </main>
+
+<script>
+
+    $.getJSON( "/chathost/admin/users", function( data ) {
+    	console.log("Getting admins");
+    	console.log(data);
+    	for (var i=0; i<data.length;i++) {
+			var html = `<TR><TD>${i}</td><td>${data[i]}</td><td><span data-toggle="modal" data-target="#confirmModal" onclick="deleteUser('${data[i]}')"><i id="${data[i]}" class="deleteUser trash large icon"></i></span></td></tr>`;
+			$('#adminTable').append(html);
+    	}
+    });
+
+	function openCreateUserRegion() {
+		$("#createUserRegion").show();
+		$("#buttonRegion").hide();
+		$("#adminTableRegion").hide();
+	}
+
+	function loadModal(email) {
+		console.log("loadModal: " + email);
+		$("#showEmail").text(email);
+		$("#modalYes").attr('onclick', `deleteUser('${email}')`);
+	}
+
+	function createUser() {
+		var username = $("#createUserEmail").val();
+		var password = $("#createUserPassword").val();
+		console.log(`Creating User Account for ${username}`);
+		alert(`Creating New Account for ${username} . . .`);
+		$.ajax({url: '/chathost/admin/user',type: 'PUT',data: `username=${username}&password=${password}`,
+		   statusCode: {
+			  404: function (response) {
+			    console.log("ERROR!");
+				alert("Something went wrong. We couldn't create that account.  Check server logs for more information.")
+				window.location.replace("/chathost/admins.html");	
+			  }
+		   }, success: function () {
+		   		console.log("Success");
+				window.location.replace("/chathost/admins.html");
+		   }
+		});		
+	}
+
+	function deleteUser(email) {
+		console.log("deleteUser: " + email);
+		alert (`Are you sure you want to delete the user ${email}`);
+		$.ajax({url: `/chathost/admin/user/${email}`,type: 'DELETE',
+		   statusCode: {
+			  404: function (response) {
+			    console.log("ERROR!");
+				alert("Something went wrong. We couldn't find that account to delete.")
+				window.location.replace("/chathost/admins.html");	
+			  }
+		   }, success: function () {
+		   		console.log("Success");
+				window.location.replace("/chathost/admins.html");	
+		   }
+		});
+	}
+
+
+
+</script>
+
+  </body>
+</html>

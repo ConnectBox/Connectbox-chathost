@@ -8,10 +8,33 @@ const express = require('express'),
 
 
 //  Get the s data
-router.get('/users', function getState(req, res) {
+router.get('/users', async function getUsers(req, res) {
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: `);
-	res.send(rocketchat.data);
+	res.send(await mongo.getUsers());
 });
+
+router.put('/user', async function putUser(req, res) {
+	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: `);
+	var result = await mongo.putUser(req.body);
+	if (result) {
+		res.sendStatus(200)	
+	}
+	else {
+		res.sendStatus(404);
+	}
+});
+
+router.delete('/user/:username', async function deleteUser(req, res) {
+	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: `);
+	var result = await mongo.deleteUser(req.params.username);
+	if (result) {
+		res.sendStatus(200)	
+	}
+	else {
+		res.sendStatus(404);
+	}
+});
+
 
 router.get('/users/:userid', function getUser(req, res) {
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: `);

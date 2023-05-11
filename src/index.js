@@ -73,21 +73,26 @@ webapp.get('/chathost/auth', function getAuth(req, res) {
 	}
 });
 webapp.post('/chathost/auth', async function postAuth(req,res) {
-	var result = {username: req.body.username};
-	if (req.headers.host === 'localhost:2820'){
+	if (req.headers.host === 'alocalhost:2820'){
 		req.session.username = req.body.username;
 		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: POSTMAN TESTS ${req.body.username} authorized`);
 		res.redirect(req.body.redirect || '/dashboard');		
 	}
-	else if (!result.username) {
-		logger.log('error', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${req.headers['x-forwarded-for'] || req.socket.remoteAddress} access denied`);
-		res.redirect('/login.html');
+	else if (req.body.username === process.env.CHATHOST_ADMIN && req.body.password === process.env.CHATHOST_ADMINPASSWORD) {
+		req.session.username = req.body.username;
+		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${req.body.username} Default Admin authorized`);
+		//console.log(req.session);
+		res.redirect(req.body.redirect || '/dashboard');		
+	}
+	else if (await mongo.getUserAuth(req.body.username,req.body.password)) {
+		req.session.username = req.body.username;
+		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${req.body.username} User authorized`);
+		//console.log(req.session);
+		res.redirect(req.body.redirect || '/dashboard');			
 	}
 	else {
-		req.session.username = result.username;
-		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${req.body.username} authorized`);
-		//console.log(req.session);
-		res.redirect(req.body.redirect || '/dashboard');	
+		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${req.body.username} DENIED`);
+		res.redirect('/chathost/login.html');
 	}
 });
 webapp.get('/chathost/logout', function getAuth(req, res) {

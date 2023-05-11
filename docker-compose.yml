@@ -40,7 +40,7 @@ services:
 
 # Chathost APIs
   chathost:
-    image: 'node:14.17.5'
+    image: 'node:16'
     container_name: chathost
     restart: always
     working_dir: /usr/src
@@ -55,9 +55,8 @@ services:
       - CHATHOST_PORT=2820
       - CHATHOST_LOGGING=console
       - CHATHOST_MONGO=mongodb://mongo:27017/chathost
-      - CHATHOST_ROCKETCHAT=http://rocketchat:3000
-      - CHATHOST_ROCKETCHATADMIN=admin
-      - CHATHOST_ROCKETCHATPASSWORD=${MASTERPASSWORD}
+      - CHATHOST_ADMIN=admin
+      - CHATHOST_ADMINPASSWORD=${MASTERPASSWORD}
       - CHATHOST_BOLT=https://bolt.${URL}
     ports:
       - '2820:2820/tcp'

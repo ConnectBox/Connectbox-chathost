@@ -13,12 +13,22 @@ const configs = require('./configs.js'),
 var db;
 var settingsPending = {};
 
-MongoClient.connect(configs.mongo,{ useUnifiedTopology: true}, async function(err, client) {
-	assert.equal(null, err);
-	logger.log('info', `mongoClientConnect: Connected Successfully to MongoDB: ${configs.mongo}`);
+// MongoClient.connect(configs.mongo,{ useUnifiedTopology: true}, async function(err, client) {
+// 	assert.equal(null, err);
+// 	logger.log('info', `mongoClientConnect: Connected Successfully to MongoDB: ${configs.mongo}`);
+// 	db = client.db(dbName);
+// 	setUpMongo();
+// });
+
+startMongo();
+async function startMongo() {
+	logger.log('info', `mongoClientConnect: Connecting to MongoDB: ${configs.mongo}`);
+	const client = new MongoClient(configs.mongo);
+	await client.connect();
 	db = client.db(dbName);
+	logger.log('info', `mongoClientConnect: Connected Successfully to MongoDB: ${configs.mongo}`);
 	setUpMongo();
-});
+}
 
 async function checkAPIKeys(boxid,authorization) {
 	if (authorization) {

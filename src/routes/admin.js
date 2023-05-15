@@ -2,7 +2,8 @@ const express = require('express'),
     router = express.Router()
     configs = require('../configs.js'),
     fs = require('fs'),
-    mongo = require('../mongo.js'),
+    dataStructure = require('../dataStructure.js'),
+
     Logger = require('../logger.js'),
     logger = new Logger(configs.logging);
 
@@ -10,12 +11,12 @@ const express = require('express'),
 //  Get the s data
 router.get('/users', async function getUsers(req, res) {
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: `);
-	res.send(await mongo.getUsers());
+	res.send(await dataStructure.getUsers());
 });
 
 router.put('/user', async function putUser(req, res) {
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: `);
-	var result = await mongo.putUser(req.body);
+	var result = await dataStructure.putUser(req.body);
 	if (result) {
 		res.sendStatus(200)	
 	}
@@ -26,7 +27,7 @@ router.put('/user', async function putUser(req, res) {
 
 router.delete('/user/:username', async function deleteUser(req, res) {
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: `);
-	var result = await mongo.deleteUser(req.params.username);
+	var result = await dataStructure.deleteUser(req.params.username);
 	if (result) {
 		res.sendStatus(200)	
 	}
@@ -69,12 +70,12 @@ router.get('/boltURL', function getboltURL(req,res) {
 
 router.get('/boxes', async function getBoxes(req, res) {
 	var response = [];
-	var boxes = await mongo.getBoxInventory();
+	var boxes = await dataStructure.getBoxInventory();
 	for (var box of boxes) {
 		box.courses = 0;
 		box.teachers = 0;
 		box.students = 0;
-		var courses = await mongo.getBoxRosters(box.boxid);
+		var courses = await dataStructure.getBoxRosters(box.boxid);
 		if (courses && courses[0]) {	
 			box.sitename = courses[0].sitename;
 			box.siteadmin_name = courses[0].siteadmin_name;
@@ -100,14 +101,13 @@ router.get('/boxes', async function getBoxes(req, res) {
 });
 
 router.delete('/boxes/:boxid', async function getSecurity(req, res) {
-	mongo.deleteCourseRoster(req.params.boxid);
-	mongo.deleteSecurity(req.params.boxid);
+	dataStructure.deleteBox(req.params.boxid);
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: Done`);
 	res.sendStatus(200);
 });
 
 router.get('/roster/:boxid', async function getRosters(req,res) {
-	var response = await mongo.getBoxRosters(req.params.boxid);
+	var response = await dataStructure.getBoxRosters(req.params.boxid);
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${response.length} Courses`);
 	res.send(response);
 });
@@ -126,25 +126,25 @@ router.get('/system', async function getSystem(req,res) {
 
 //  Get the logs data  //todo
 router.get('/logs/:boxid', async function getLogs(req, res) {
-	var response = await mongo.getLogs(req.params.boxid);
+	var response = await dataStructure.getLogs(req.params.boxid);
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${response.length} Logs`);
 	res.send(response);
 });
 
 router.get('/settings/:boxid', async function getSettings(req, res) {
-	var response = await mongo.getSettings(req.params.boxid,true);
+	var response = await dataStructure.getSettings(req.params.boxid,true);
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${response.length} Settings Pending`);
 	res.send(response);
 });
 
 router.post('/settings/:boxid', function putSetting(req,res) {
-	mongo.putSetting(req.params.boxid,req.body.key,req.body.value);
+	dataStructure.putSetting(req.params.boxid,req.body.key,req.body.value);
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${req.body.key} = ${req.body.value}`);
 	res.send({});
 });
 
 router.delete('/settings/:boxid/:deleteId', async function putSetting(req,res) {
-	var result = await mongo.deleteSetting(req.params.boxid,req.params.deleteId);
+	var result = await dataStructure.deleteSetting(req.params.boxid,req.params.deleteId);
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${req.params.deleteId}`);
 	if (result) {
 		res.sendStatus(200);
@@ -155,19 +155,19 @@ router.delete('/settings/:boxid/:deleteId', async function putSetting(req,res) {
 });
 
 router.get('/security/:boxid', async function getSecurity(req, res) {
-	var response = await mongo.getSecurity(req.params.boxid);
+	var response = await dataStructure.getSecurity(req.params.boxid);
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${response.length} Logs`);
 	res.send(response);
 });
 
 router.put('/security/:boxid/:authorization', function putSecurity(req,res) {
-	mongo.putSecurity(req.params.boxid,req.params.authorization);
+	dataStructure.putSecurity(req.params.boxid,req.params.authorization);
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${req.body.key} = ${req.body.value}`);
 	res.send({});
 });
 
 router.delete('/security/:boxid', function putSecurity(req,res) {
-	mongo.deleteSecurity(req.params.boxid);
+	dataStructure.deleteSecurity(req.params.boxid);
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}`);
 	res.send({});
 });
@@ -187,7 +187,7 @@ router.get('/stats', async function getStats(req,res) {
 			}
 		}
 	}
-	res.send(await mongo.searchLogs(mongoquery));
+	res.send(await dataStructure.searchLogs(mongoquery));
 })
 
 

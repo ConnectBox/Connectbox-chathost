@@ -2,7 +2,6 @@
 var configs = {
 	"logging":"console",
 	"port":2820,
-	"mongo": "mongodb://mongo:27017",
 	"bolt": "https://bolt.connectbox.org"
 };
 

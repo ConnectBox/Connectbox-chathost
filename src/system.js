@@ -18,7 +18,6 @@ async function run() {
  	results.docker = await checkDocker();
  	results.chathost = await checkURL('http://localhost:2820/chathost/healthCheck');
  	results.bolt = await checkURL('http://localhost:8080');
- 	results.mongo = await checkMongo();
 	results.cpu = await getCPU() + '%';
 	results.memory = await getMEM() + '%';
 	results.disk = await getDisk() + '%';
@@ -29,22 +28,6 @@ async function run() {
 }
 
 
-async function checkMongo() {
-    let promise = new Promise((resolve, reject) => {
-		MongoClient.connect('mongodb://localhost:27017/local?readPreference=primary&appname=MongoDB%20Compass&ssl=false',{ useUnifiedTopology: true}, function(err, client) {
-			assert.equal(null, err);
-			db = client.db(dbName);
-			if (db && db.s && db.s.namespace) {
-				resolve (true);
-			}
-			else {
-				resolve (false);
-			}
-		});
-	});
-    let result = await promise;
-    return result;
-}
 
 async function checkDocker() {
 	var result = parseInt(execSync('docker ps |wc -l').toString()) - 1;

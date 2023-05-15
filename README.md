@@ -5,7 +5,6 @@ This project is related to Connectbox, a content delivery device
 
 # Components
 * Dashboard with APIs (Developer Info: https://github.com/connectbox/chathost/tree/main/src)
-* MongoDB for Dasboard
 * nginx for Rocket, Chathost APIs
 * BoltCMS for content management
 

@@ -2,51 +2,13 @@ version: '2'
 
 services:
 
-# Database for rocketchat and chathost APIs
-  mongo:
-    image: mongo:4.0
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-    container_name: mongo
-    restart: unless-stopped
-    ports:
-      - 27017:27017
-    volumes:
-     - ../data/db:/data/db
-     #- ./data/dump:/dump
-    command: mongod --smallfiles --oplogSize 128 --replSet rs0
-    labels:
-      - "traefik.enable=false"
-
-  # this container's job is just run the command to initialize the replica set.
-  # it will run the command and remove himself (it will not stay running)
-  mongo-init-replica:
-    image: mongo:4.0
-    command: >
-      bash -c
-        "for i in `seq 1 30`; do
-          mongo mongo/rocketchat --eval \"
-            rs.initiate({
-              _id: 'rs0',
-              members: [ { _id: 0, host: 'localhost:27017' } ]})\" &&
-          s=$$? && break || s=$$?;
-          echo \"Tried $$i times. Waiting 5 secs...\";
-          sleep 5;
-        done; (exit $$s)"
-    depends_on:
-      - mongo
-
-# Chathost APIs
+# Chathost and APIs
   chathost:
     image: 'node:16'
     container_name: chathost
     restart: always
     working_dir: /usr/src
     command: [ 'node', 'index.js' ]
-    depends_on:
-      - mongo
     logging:
       driver: json-file
       options:
@@ -54,7 +16,6 @@ services:
     environment:
       - CHATHOST_PORT=2820
       - CHATHOST_LOGGING=console
-      - CHATHOST_MONGO=mongodb://mongo:27017/chathost
       - CHATHOST_ADMIN=admin
       - CHATHOST_ADMINPASSWORD=${MASTERPASSWORD}
       - CHATHOST_BOLT=https://bolt.${URL}

@@ -2,7 +2,8 @@ const express = require('express'),
     router = express.Router()
     configs = require('../configs.js'),
     fs = require('fs'),
-    mongo = require('../mongo.js'),
+    dataStructure = require('../dataStructure.js'),
+
     messages = require('./messages.js'),
     Logger = require('../logger.js'),
     logger = new Logger(configs.logging);

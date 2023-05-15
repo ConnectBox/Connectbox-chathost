@@ -8,7 +8,7 @@ const express = require('express'),
 	moment = require('moment-timezone'),
     configs = require('./configs.js'),
     Logger = require('./logger.js'),
-    mongo = require('./mongo.js'),
+    dataStructure = require('./dataStructure.js'),
     logger = new Logger(configs.logging);
 
 
@@ -16,7 +16,7 @@ webapp.listen(configs.port);
 webapp.use(async function (req, res, next) {
 	if (req.headers.authorization) {
 		var headers = req.headers.authorization.replace('Bearer ', '').split('|');
-		req.boxid = await mongo.checkAPIKeys(headers[0],headers[1]);
+		req.boxid = await dataStructure.checkAPIKeys(headers[0],headers[1]);
 		var isAuthorized = "No";
 		if (req.boxid) {
 			isAuthorized = "Yes";
@@ -73,7 +73,8 @@ webapp.get('/chathost/auth', function getAuth(req, res) {
 	}
 });
 webapp.post('/chathost/auth', async function postAuth(req,res) {
-	if (req.headers.host === 'alocalhost:2820'){
+	console.log(req.body);
+	if (req.headers.host === 'localhost:2820' && req.body.username === 'postman'){
 		req.session.username = req.body.username;
 		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: POSTMAN TESTS ${req.body.username} authorized`);
 		res.redirect(req.body.redirect || '/dashboard');		
@@ -84,7 +85,7 @@ webapp.post('/chathost/auth', async function postAuth(req,res) {
 		//console.log(req.session);
 		res.redirect(req.body.redirect || '/dashboard');		
 	}
-	else if (await mongo.getUserAuth(req.body.username,req.body.password)) {
+	else if (await dataStructure.getUserAuth(req.body.username,req.body.password)) {
 		req.session.username = req.body.username;
 		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: ${req.body.username} User authorized`);
 		//console.log(req.session);
@@ -120,14 +121,15 @@ webapp.get('/chathost/link/cloud', function getAuth(req, res) {
 
 // Check for authorization
 webapp.use(async function (req, res, next) {
-	if (req.session.username) {
-		// Silent for Now
-		next();
-	}
-	else if (req.boxid) {
-		//logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: Authorized Boxid: ${req.boxid}: ${req.headers.authorization}`);	
+	if (req.boxid) {
+		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: Authorized Boxid: ${req.boxid}: ${req.headers.authorization}`);	
 		req.boxauthorization = req.headers.authorization;
 		next();		
+	}
+	else if (req.session.username) {
+		logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: Valid User: ${req.session.username}`);	
+		// Silent for Now
+		next();
 	}
 	else if (req.headers['x-boxid']) {
 		// Well box is sending credentials but they are invalid
@@ -137,7 +139,7 @@ webapp.use(async function (req, res, next) {
 	else if (req.headers.authorization) {
 		// Probably a dashboard user that is not valid
 		logger.log('error', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}: Unauthorized Request: Invalid Authorization Credentials: Return 401`);
-		mongo.unauthorizedBoxes(req.headers.authorization);
+		dataStructure.unauthorizedBoxes(req.headers.authorization);
 		//console.log(req.headers);
 		res.sendStatus(401);	
 	}

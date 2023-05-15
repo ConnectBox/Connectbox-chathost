@@ -1,7 +1,6 @@
 const configs = require('./configs.js'),
     Logger = require('./logger.js'),
     logger = new Logger(configs.logging),
-    CryptoJS = require("crypto-js"),
 	moment = require('moment-timezone'),
     fs = require('fs'),
 	FileType = require('file-type'),

@@ -22,6 +22,7 @@
     "express": "*",
     "express-session": "*",
     "file-type": "*",
+    "filter-object-array": "^0.3.6",
     "moment": "*",
     "moment-timezone": "*",
     "multer": "*",

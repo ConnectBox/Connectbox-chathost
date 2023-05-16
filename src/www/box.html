@@ -144,7 +144,7 @@ loadDetails(boxid);
 			$("#hreflogs").attr('href',`logs.html?id=${id}`);
 			$("#hrefsecurity").attr('href',`security.html?id=${id}`);
 			$("#hrefopenwell").attr('href',`content.html?id=${id}`);
-			$("#hrefstats").attr('href',`stats.html?id=${id}`);
+			$("#hrefstats").attr('href',`stats.html?boxid=${id}`);
 			$("#hreftrash").attr('href',`trash.html?id=${id}`);
 			$("#emailLink").attr('href',`mailto:${boxData.siteadmin_email}`);
 			boxData.syncdate = moment(boxData.timestamp * 1000).format('LLL');

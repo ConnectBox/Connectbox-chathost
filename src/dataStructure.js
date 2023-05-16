@@ -4,6 +4,7 @@ const configs = require('./configs.js'),
 	moment = require('moment-timezone'),
     fs = require('fs'),
 	FileType = require('file-type'),
+	filterObjectArray = require('filter-object-array'),
   	{ v4: uuidv4 } = require('uuid'); 
 
 var db = {
@@ -170,17 +171,60 @@ function replacer(key,value)
     else return value;
 }
 
-function searchLogs(querystring) {
-//     let promise = new Promise((resolve, reject) => {
-//     	console.log('1');
-// 		const collection = db.collection('logs');
-// 		console.log(querystring);
-// 		collection.find(querystring).toArray(function(err, response) {
-// 			resolve(response);
-// 		});
-// 	});
-//     let result = await promise;
-//     return result;
+async function searchLogs(params) {
+	logger.log('info', `boxId: ${boxid}: searchLogs: Searching For: ${JSON.stringify(params)}`);
+	var response = [];
+	var logsToProcess = [];
+	for (var boxid of Object.keys(state.boxes)) {
+		if (params.boxid && params.boxid != boxid) {
+			continue;
+		}
+		if (state.boxes[boxid].logs) {
+			logsToProcess = logsToProcess.concat(state.boxes[boxid].logs)
+		}
+		else {
+			continue;
+		}
+		logger.log('info', `boxId: ${boxid}: searchLogs: Found ${state.boxes[boxid].logs.length} logs to process`);
+	}
+
+	// If necessary, look for logs within time range
+	if (params.starttime || params.endtime) {
+		var logsInDateRange = []
+		params.starttime = params.starttime || 0;
+		params.endtime = params.endtime || moment().unix() + 1;
+		logger.log('info', `boxId: ${boxid}: searchLogs: Seeking logs between ${params.starttime} and ${params.endtime}`);
+		var counter=0;
+		for (var log of logsToProcess) {
+			if (log.timestamp >= params.starttime && log.timestamp <= params.endtime) {
+				logsInDateRange.push(log);
+			}
+			counter++;
+		}
+		logsToProcess = logsInDateRange;
+		logger.log('info', `boxId: ${boxid}: searchLogs: Found ${logsToProcess.length} logs between ${params.starttime} and ${params.endtime}`);		
+	}
+
+	// We have already done boxid filter, so delete that params
+	delete params.boxid;
+	// We have already done time filters, so delete those params
+	delete params.starttime;
+	delete params.endtime;
+	
+	// Now we have a bunch of logs to filter through
+	
+	// Create filter structure
+	var filter = {};
+	for (var param of Object.keys(params)) {
+		filter[param] = params[param];
+	}
+	
+	logger.log('info', `boxId: ${boxid}: searchLogs: Filter: ${JSON.stringify(filter)}`);
+	console.log(filter);
+	
+	response = await filterObjectArray({ array: logsToProcess, objFilter: filter });
+	logger.log('info', `boxId: ${boxid}: searchLogs: Returning ${response.length} logs to display`);
+	return (response);
 }
 
 function getLogs(boxid) {
@@ -248,6 +292,7 @@ function deleteSetting(boxid,recordid) {
 			state.boxes[boxid].settings.splice(counter, 1);
 			return (true);
 		}
+		counter++;
 	}
 	return (False)
 }

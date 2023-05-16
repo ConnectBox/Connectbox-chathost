@@ -2,7 +2,6 @@ const
 
 	moment = require('moment-timezone'),
     fs = require('fs'),
-	MongoClient = require('mongodb').MongoClient,
 	assert = require('assert'),
 	dbName = "chathost",	
 	request = require('request'),

@@ -173,21 +173,8 @@ router.delete('/security/:boxid', function putSecurity(req,res) {
 });
 
 router.get('/stats', async function getStats(req,res) {
-	var mongoquery = {type:"content" || req.params.type};
-	var parameters = ["boxid", "type", "country", "starttime", "endtime", "mediaType", "mediaIdentifier", "mediaProvider", "mediaLanguage", "interactionType"]
-	for (var parameter of parameters) {
-		if (req.query[parameter]) {
-			if (parameter === 'starttime' || parameter === 'endtime') {
-				mongoquery.timestamp = { $gte: parseInt(req.query.starttime) || 0, $lt:parseInt(req.query.endtime) || 3000000000};
-				delete req.query.starttime;
-				delete req.query.endtime;
-			}
-			else {
-				mongoquery[parameter] = req.query[parameter];
-			}
-		}
-	}
-	res.send(await dataStructure.searchLogs(mongoquery));
+	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}`);
+	res.send(await dataStructure.searchLogs(req.query));
 })
 
 

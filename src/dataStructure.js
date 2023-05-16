@@ -29,12 +29,7 @@ var test = {
 }
 
 loadState();
-console.log(state);
-console.log(checkAPIKeys(test.boxid,test.authorization));
-console.log(deleteSecurity(test.boxid))
-console.log(putSetting(test.boxid,'KEY','VALUE'))
-//console.log(getMessageStatusValue(test.boxid))
-//console.log(setMessageStatusValue(test.boxid))
+
 
 console.log(JSON.stringify(state,null,2));
 
@@ -64,7 +59,7 @@ function saveState(callback) {
 	}
 }
 
-setInterval(saveState, 5000);
+setInterval(saveState, 60000 * configs.saveInterval);
 
 function checkAPIKeys(boxid,authorization) {
 	if (authorization) {

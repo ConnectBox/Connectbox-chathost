@@ -33,6 +33,10 @@ loadState();
 
 console.log(JSON.stringify(state,null,2));
 
+function getState() {
+	return(state);
+}
+
 function loadState() {
 	try {
 		logger.log('info', `loadState: LOADING`);		
@@ -407,6 +411,7 @@ function stringToHash(string) {
 }
 
 module.exports = {
+	getState,
 	checkAPIKeys,
 	setCourseRoster,
 	unauthorizedBoxes,

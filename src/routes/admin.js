@@ -179,7 +179,7 @@ router.get('/stats', async function getStats(req,res) {
 
 router.get('/state', async function getState(req,res) {
 	logger.log('debug', `boxId: ${req.boxid}: ${req.method} ${req.originalUrl}`);
-	res.send(await dataStructure.);	
+	res.send(await dataStructure.state);	
 })
 
 module.exports = router;

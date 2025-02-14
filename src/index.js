@@ -116,7 +116,8 @@ webapp.get('/chathost/link/authoring', function getAuth(req, res) {
 // This handles redirection to Moodle authoring
 webapp.get('/chathost/link/cloud', function getAuth(req, res) {
 	var bolt = process.env['CHATHOST_BOLT'] || configs.bolt;
-	res.redirect(bolt || '/dashboard');
+	//res.redirect(bolt || '/dashboard');
+	res.redirect('http://bolt.connectbox.org');
 });
 
 // Check for authorization

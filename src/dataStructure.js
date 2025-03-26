@@ -88,7 +88,7 @@ console.log('========');
 		delete state.boxes[boxid].newAuth;
 		return (boxid);
 	}
-	else if (!state.boxes[boxid].authorization) {
+	else if (!state.boxes[boxid] || !state.boxes[boxid].authorization) {
 		logger.log('error', `checkAPIKeys: No Current Key On Server.  Accept Box's Key`);
 		state.boxes[boxid].authorization = authorization;
 		delete state.boxes[boxid].newAuth;

@@ -78,6 +78,16 @@ console.log('========');
 	if (!boxid || boxid.length <= 6) {
 		return (false);
 	}
+	if (!state.boxes[boxid]) {
+		state.boxes[boxid] = {
+			authorization: authorization,
+			newAuth: uuidv4(),
+			boxSyncTime: 0,
+			courseRoster: {},
+			settings: [],
+			logs: []
+		}
+	}
 	if (state.boxes[boxid] && state.boxes[boxid].authorization && state.boxes[boxid].authorization === authorization) {
 		logger.log('info', `checkAPIKeys: Valid Boxid: ${boxid}`);
 		return boxid;

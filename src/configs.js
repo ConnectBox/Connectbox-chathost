@@ -3,7 +3,7 @@ var configs = {
 	"logging":"console",
 	"port":2820,
 	"bolt": "http://bolt.connectbox.org",
-	saveInterval: 10
+	saveInterval: 1
 };
 
 const

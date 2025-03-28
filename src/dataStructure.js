@@ -3,7 +3,6 @@ const configs = require('./configs.js'),
     logger = new Logger(configs.logging),
 	moment = require('moment-timezone'),
     fs = require('fs'),
-	FileType = require('file-type'),
 	filterObjectArray = require('filter-object-array'),
   	{ v4: uuidv4 } = require('uuid'); 
 
@@ -34,6 +33,7 @@ loadState();
 console.log(JSON.stringify(state,null,2));
 
 function getState() {
+console.log(1,state,2)
 	return(state);
 }
 
@@ -50,12 +50,13 @@ function loadState() {
 			 boxes: {},
 			 users: {}
 		}
+		saveState();
 	}
 }
 
 function saveState(callback) {
 	var hash = stringToHash(JSON.stringify(state));	
-	logger.log('info', `saveState: New State is hash: ${hash}  --   Existing is: ${lastSavedState})`);
+	console.log(`saveState: New State is hash: ${hash}  --   Existing is: ${lastSavedState})`);
 	if (hash !== lastSavedState) {
 		lastSavedState = hash;
 		logger.log('info', `saveState: Saving`);
@@ -82,7 +83,7 @@ console.log('========');
 		state.boxes[boxid] = {
 			authorization: authorization,
 			newAuth: uuidv4(),
-			boxSyncTime: 0,
+			boxSyncTime: moment().unix(),
 			courseRoster: {},
 			settings: [],
 			logs: []
@@ -164,7 +165,7 @@ function getBoxRosters(boxid) {
 		return ([])
 	}
 	else {
-		return (state.boxes[boxid].courseRoster.data);
+		return (state.boxes[boxid].courseRoster.data || []);
 	}
 }
 
@@ -356,7 +357,7 @@ function deleteSecurity(boxid) {
 }
 
 function getUsers() {
-	console.log(`boxId: ${boxid}: getUsers`);
+	console.log(`auth: getUsers`);
 	var response = []
 	for (var username of Object.keys(state.users)) {
 		response.push(username)
@@ -365,18 +366,18 @@ function getUsers() {
 }
 
 function getUserAuth(username,password) {
-	if (state.users[username] && state.users[useername].password === password) {
-		console.log(`boxId: ${username}: getUserAuth: Authorized`);
+	if (state.users[username] && state.users[username].password === password) {
+		console.log(`auth: ${username}: getUserAuth: Authorized`);
 		return (true);
 	}
 	else {
-		console.log(`boxId: ${username}: getUserAuth: NOT Authorized`);
+		console.log(`auth: ${username}: getUserAuth: NOT Authorized`);
 		return (false);
 	}
 }
 
 function putUser(data) {
-	console.log(`boxId: ${boxid}: putUser`);
+	console.log(`auth: ${data.username}: putUser`);
 	state.users[data.username] = {
 		password: data.password,
 		timestamp: moment().unix()
@@ -385,7 +386,7 @@ function putUser(data) {
 }
 
 function deleteUser(username) {
-	console.log(`boxId: ${boxid}: deleteUser: ${username}`);
+	console.log(`auth: ${username}: deleteUser: ${username}`);
 	delete state.users[username];
 	return true;
 }
@@ -428,6 +429,7 @@ function stringToHash(string) {
 
 module.exports = {
 	getState,
+	saveState,
 	checkAPIKeys,
 	setCourseRoster,
 	unauthorizedBoxes,

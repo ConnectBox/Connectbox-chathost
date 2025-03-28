@@ -11,6 +11,24 @@ const express = require('express'),
     dataStructure = require('./dataStructure.js'),
     logger = new Logger(configs.logging);
 
+	var signals = {};
+
+	signals = {
+		'SIGHUP': 1,
+		'SIGINT': 2,
+		'SIGTERM': 15	
+	}
+	
+	// Create a listener for each of the signals that we want to handle
+	Object.keys(signals).forEach((signal) => {
+	  process.on(signal, async () => {
+		console.log(`${process.pid}	LOG:BOOT: shutting down...`);
+		await dataStructure.saveState();		
+		process.exit(0)
+		});
+	});
+	
+
 
 webapp.listen(configs.port);
 webapp.use(async function (req, res, next) {

@@ -67,7 +67,7 @@ AWS Backup has a simple backup tool for EC2 instances.  Recommend the daily, mon
 * Teacher Setup
   * Video: https://www.loom.com/share/37d28730fba6481180362c036980c0b7?sharedAppSource=personal_library
   * A teacher account, with a valid email address should be set up in Rocketchat first.  The teacher must have a role of "User" or "Admin" if you wish for that teacher to be an Admin.
-  * The Well instance must be configured to sync to the same server with Rocketchat.  When the Well is connected to the Internet, it will sync every ten minutes or may be manually sync'd at http://learn.thewell/local/chat_attachments/push_messages.php?logging=display (more documentation on this sync: https://github.com/RT-coding-team/the-well-moodle310/tree/master/local/chat_attachments).
+  * The Well instance must be configured to sync to the same server with Rocketchat.  When the Well is connected to the Internet, it will sync every ten minutes or may be manually sync'd at http://learn.thewell/local/chat_attachments/push_messages.php?logging=display.
   * Sync status can be confirmed in the Dashboard at http://yourrocketchatserver/dashboard
   * Create a course in the Well's Moodle instance and create the teacher account.  The teacher will never access the account here.
 * Adding a Student

@@ -29,7 +29,7 @@
 
 - name: Install Chathost repo
   git:
-    repo: 'https://github.com/RT-coding-team/chathost.git'
+    repo: 'https://github.com/ConnectBox/connectbox-chathost.git'
     dest: "{{ document_root }}/chathost"  # With git declar the final directory
     clone: yes
     force: yes

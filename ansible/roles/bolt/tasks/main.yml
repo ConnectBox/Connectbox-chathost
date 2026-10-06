@@ -4,7 +4,7 @@
 
 - name: Install mmbuilder repo
   git:
-    repo: 'https://github.com/RT-coding-team/mediabuilder.git'
+    repo: 'https://github.com/ConnectBox/mediabuilder.git'
     dest: "{{ document_root }}/mediabuilder"  # With git declar the final directory
     clone: yes
     force: yes

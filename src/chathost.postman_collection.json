@@ -117,10 +117,10 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.collectionVariables.set('cookie-relaytrust', pm.cookies.get('relaytrust'));",
-							"pm.collectionVariables.set('cookie-relaytrust.sig', pm.cookies.get('relaytrust.sig'));",
+							"pm.collectionVariables.set('cookie-connectbox', pm.cookies.get('connectbox'));",
+							"pm.collectionVariables.set('cookie-connectbox.sig', pm.cookies.get('connectbox.sig'));",
 							"pm.test(\"Authorized\", function () {",
-							"    pm.collectionVariables.get(\"cookie-relaytrust\");",
+							"    pm.collectionVariables.get(\"cookie-connectbox\");",
 							"});",
 							""
 						],
@@ -2057,11 +2057,11 @@
 			"value": ""
 		},
 		{
-			"key": "cookie-relaytrust",
+			"key": "cookie-connectbox",
 			"value": ""
 		},
 		{
-			"key": "cookie-relaytrust.sig",
+			"key": "cookie-connectbox.sig",
 			"value": ""
 		},
 		{

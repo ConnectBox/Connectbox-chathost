@@ -55,7 +55,7 @@ webapp.use (function (error, req, res, next){
 webapp.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 webapp.use(bodyParser.text({ type: 'text/html' , limit: '50mb'}));
 webapp.use(cookieParser());
-webapp.use(cookieSession({name: 'relaytrust',keys: ['81143184-d876-11eb-b8bc-0242ac130003'],maxAge: 24 * 60 * 60 * 1000}));
+webapp.use(cookieSession({name: 'connectbox',keys: ['81143184-d876-11eb-b8bc-0242ac130003'],maxAge: 24 * 60 * 60 * 1000}));
 
 
 webapp.use('/chathost/healthcheck', function health(req, res) {

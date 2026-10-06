@@ -55,7 +55,11 @@ webapp.use (function (error, req, res, next){
 webapp.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 webapp.use(bodyParser.text({ type: 'text/html' , limit: '50mb'}));
 webapp.use(cookieParser());
-webapp.use(cookieSession({name: 'connectbox',keys: ['81143184-d876-11eb-b8bc-0242ac130003'],maxAge: 24 * 60 * 60 * 1000}));
+// Session cookies are signed with CHATHOST_SESSION_KEY (from the server's secrets).
+// Without it a random key is made at start-up, so sessions just end on restart -
+// never fall back to a fixed key: anyone who knows it can forge a login.
+const sessionKey = process.env.CHATHOST_SESSION_KEY || require('crypto').randomBytes(32).toString('hex');
+webapp.use(cookieSession({name: 'connectbox',keys: [sessionKey],maxAge: 24 * 60 * 60 * 1000}));
 
 
 webapp.use('/chathost/healthcheck', function health(req, res) {

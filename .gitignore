@@ -1,8 +1,8 @@
-
 .env
 uploads/
 node_modules/
-package-lock.json
-package-lock.json
-package-lock.json
 src/state.json
+
+# Server secrets and host list - never commit (see ansible/*.example*)
+ansible/inventory
+ansible/secrets.yml

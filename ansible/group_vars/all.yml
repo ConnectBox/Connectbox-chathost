@@ -1,0 +1,12 @@
+---
+# Defaults for every server; override per host in the inventory.
+
+# Where chathost and mediabuilder are installed
+document_root: /srv/connectbox
+
+# Port nginx listens on for plain HTTP (redirects to HTTPS when use_https)
+http_port: 80
+
+# Request Let's Encrypt certificates for chat.<url> and bolt.<url> and serve
+# HTTPS.  Set false only behind your own HTTPS load balancer.
+use_https: true

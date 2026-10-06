@@ -1,0 +1,20 @@
+---
+# Docker Engine and the Compose v2 plugin ("docker compose") from Ubuntu's own
+# archive - no third-party apt repository or keys to manage.  Replaces the old
+# bundled ansible-role-docker, which installed the discontinued Compose v1,
+# used the deprecated apt-key and rebooted the server on every run.
+
+- name: Install Docker Engine and Compose v2
+  apt:
+    name:
+      - docker.io
+      - docker-compose-v2
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Start Docker and enable it at boot
+  service:
+    name: docker
+    state: started
+    enabled: yes

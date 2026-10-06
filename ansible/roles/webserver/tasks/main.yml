@@ -1,0 +1,83 @@
+---
+# Host nginx in front of the containers:
+#   chat.<url> -> chathost dashboard/APIs (port 2820)
+#   bolt.<url> -> MediaBuilder (port 3000)
+# With use_https, a Let's Encrypt certificate covering both names is requested
+# (webroot challenge) and HTTP redirects to HTTPS.  Ubuntu's certbot package
+# renews it automatically (systemd timer); a deploy hook reloads nginx.
+
+- name: Install nginx and certbot
+  apt:
+    name: "{{ ['nginx'] + (['certbot'] if use_https else []) }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Create the ACME challenge directory
+  file:
+    path: /var/www/letsencrypt
+    state: directory
+    mode: "0755"
+
+- name: Disable the default nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+- name: Check for an existing certificate
+  stat:
+    path: "/etc/letsencrypt/live/{{ url }}/fullchain.pem"
+  register: cert_file
+
+# First run: HTTP only (with the ACME challenge path) until a certificate exists.
+- name: Write the nginx site
+  template:
+    src: connectbox-server.conf.j2
+    dest: /etc/nginx/sites-available/connectbox-server.conf
+    mode: "0644"
+  vars:
+    tls_enabled: "{{ use_https and cert_file.stat.exists }}"
+  notify: reload nginx
+
+- name: Enable the nginx site
+  file:
+    src: /etc/nginx/sites-available/connectbox-server.conf
+    dest: /etc/nginx/sites-enabled/connectbox-server.conf
+    state: link
+  notify: reload nginx
+
+- name: Start nginx and enable it at boot
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Apply the nginx configuration now
+  meta: flush_handlers
+
+- name: Request the Let's Encrypt certificate (chat.{{ url }}, bolt.{{ url }})
+  command: >
+    certbot certonly --webroot -w /var/www/letsencrypt
+    --cert-name {{ url }} -d chat.{{ url }} -d bolt.{{ url }}
+    --email {{ email }} --agree-tos --non-interactive --keep-until-expiring
+  when: use_https and not cert_file.stat.exists
+
+- name: Reload nginx when a renewed certificate is installed
+  copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    mode: "0755"
+    content: |
+      #!/bin/sh
+      systemctl reload nginx
+  when: use_https
+
+- name: Switch the nginx site to HTTPS
+  template:
+    src: connectbox-server.conf.j2
+    dest: /etc/nginx/sites-available/connectbox-server.conf
+    mode: "0644"
+  vars:
+    tls_enabled: true
+  when: use_https
+  notify: reload nginx

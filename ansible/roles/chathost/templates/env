@@ -1,3 +1,4 @@
 URL={{ url }}
 MASTERPASSWORD={{ password }}
+SESSIONKEY={{ session_key }}
 ADMINEMAIL={{ email }}

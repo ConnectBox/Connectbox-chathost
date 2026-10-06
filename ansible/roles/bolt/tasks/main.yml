@@ -1,68 +1,50 @@
 ---
-##################
-# MM Builder using BoltCMS
+# MediaBuilder (Bolt CMS) for OpenWell content packages: MySQL, PHP and its own
+# nginx in Docker (ConnectBox/mediabuilder docker-compose.yml), published on
+# port 3000.  The host nginx (webserver role) serves it as bolt.<url>.
 
-- name: Install mmbuilder repo
+- name: Install mediabuilder repo
   git:
     repo: 'https://github.com/ConnectBox/mediabuilder.git'
-    dest: "{{ document_root }}/mediabuilder"  # With git declar the final directory
-    clone: yes
+    dest: "{{ document_root }}/mediabuilder"
+    version: main
     force: yes
     update: yes
 
-- name: Set Permissions of ~/mediabuilder
-  ansible.builtin.file:
+# Bolt writes caches, uploads and exports inside the checkout (bind-mounted
+# into the php container), so it must be writable from the container.
+- name: Make the mediabuilder checkout writable for the containers
+  file:
     path: "{{ document_root }}/mediabuilder"
     recurse: yes
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
-    mode: '777'
+    mode: "u+rwX,g+rwX,o+rwX"
 
-- name: Copy env to mediabuilder directory
+- name: Write mediabuilder .env (secrets from secrets.yml)
   template:
     src: env
     dest: "{{ document_root }}/mediabuilder/.env"
+    mode: "0644"
 
-- name: Copy run_docker_compose to mediabuilder directory
-  template:
-    src: run_docker_compose.sh
-    dest: "{{ document_root }}/mediabuilder/run_docker_compose.sh"
-    mode: '775'
-        
-- name: Copy nginx template
+- name: Write the exporter settings
   template:
     src: exporter.yaml
-    dest: "{{ document_root }}/mediabuilder/config/bolt/"
+    dest: "{{ document_root }}/mediabuilder/config/bolt/exporter.yaml"
 
-- name: Launch Dockers (docker-compose up -d)
-  command: 'sudo -u {{ ansible_user }} {{ document_root }}/mediabuilder/run_docker_compose.sh &'
+- name: Build and start mediabuilder (docker compose up -d --build)
+  command: docker compose up -d --build
+  args:
+    chdir: "{{ document_root }}/mediabuilder"
+  changed_when: true
 
-- name: Enable Amazon Extras for nginx
-  command: amazon-linux-extras enable nginx1
-  become: true
-  when: ansible_user == 'ec2-user'
-    
-- name: Install nginx
-  package:
-    name: nginx
-    state: latest
+- name: Wait for mediabuilder on port 3000
+  wait_for:
+    host: localhost
+    port: 3000
+    timeout: 300
 
-- name: Copy nginx template
-  template:
-    src: nginx.conf
-    dest: "/etc/nginx/nginx.conf"
-
-- name: Register nginx as service
-  service:
-    name: nginx
-    state: started
-    enabled: true
-    
-#    systemctl enable nginx
-
-- name: Reload nginx
-  command: /sbin/nginx -s reload
-
-- name: Show final instruction
+- name: Show the remaining manual step
   debug:
-    msg: "To finish Bolt setup, run this command on the server to initialize the database and create an admin user.  When asked if you want to Add fixtures, say NO.  Here's the command: docker exec -it php bin/console bolt:setup"
+    msg: >-
+      First install only: initialise Bolt's database and create its admin user with
+      'docker exec -it php bin/console bolt:setup' on the server (answer NO to
+      "Add fixtures").

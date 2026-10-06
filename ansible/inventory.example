@@ -1,0 +1,16 @@
+# Ansible inventory for a ConnectBox server (chathost + MediaBuilder)
+#
+# Copy to "inventory" (git-ignored) and put the server on one line:
+#   <server IP or name>  ansible_user=<ssh user>  url=<your domain>  email=<admin email>
+#
+# url    - the domain; the server answers at chat.<url> and bolt.<url>, and both
+#          DNS names must point at this server before the playbook runs (HTTPS
+#          certificates are requested from Let's Encrypt for them)
+# email  - admin email, also used for Let's Encrypt expiry notices
+#
+# Optional: use_https=false (plain HTTP, e.g. behind your own load balancer),
+#           document_root=/srv/connectbox (where the apps are installed)
+#
+# Passwords do NOT go here - see secrets.example.yml.
+
+203.0.113.10 ansible_user=root url=example.org email=admin@example.org

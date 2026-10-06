@@ -16,7 +16,7 @@ async function run() {
 	var results = {};
  	results.docker = await checkDocker();
  	results.chathost = await checkURL('http://localhost:2820/chathost/healthCheck');
- 	results.bolt = await checkURL('http://localhost:8080');
+ 	results.bolt = await checkURL('http://localhost:3000');
 	results.cpu = await getCPU() + '%';
 	results.memory = await getMEM() + '%';
 	results.disk = await getDisk() + '%';

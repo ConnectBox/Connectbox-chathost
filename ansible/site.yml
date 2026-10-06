@@ -1,8 +1,42 @@
 ---
+# ConnectBox server: chathost (box sync + dashboard) and MediaBuilder (Bolt CMS
+# for OpenWell content packages) behind nginx with Let's Encrypt HTTPS.
+# Target: a fresh Ubuntu 24.04 (or newer) server.  See README "Building a server".
 
 - hosts: all
   become: yes
+  vars_files:
+    - secrets.yml          # git-ignored; copy secrets.example.yml
+  pre_tasks:
+    - name: Require Ubuntu 24.04 or newer
+      assert:
+        that:
+          - ansible_distribution == 'Ubuntu'
+          - ansible_distribution_version is version('24.04', '>=')
+        fail_msg: "This playbook targets Ubuntu 24.04+ (found {{ ansible_distribution }} {{ ansible_distribution_version }})."
+
+    - name: Require url and email in the inventory
+      assert:
+        that:
+          - url is defined and url | length > 0
+          - email is defined and email | length > 0
+        fail_msg: "Set url=<domain> and email=<admin email> for this host in the inventory (see inventory.example)."
+
+    # New values are required: the old ones were published in this public repo.
+    - name: Require new secrets in secrets.yml
+      assert:
+        that:
+          - vars[item] is defined
+          - vars[item] != 'CHANGE_ME'
+          - vars[item] | length >= 12
+          - vars[item] is match('^[A-Za-z0-9]+$')
+        fail_msg: "secrets.yml: set {{ item }} to a new value of 12+ letters/digits (see secrets.example.yml)."
+        quiet: yes
+      loop: [password, bolt_app_secret, session_key]
+      no_log: yes
+
   roles:
-    - ansible-role-docker-master
+    - docker
     - chathost
     - bolt
+    - webserver

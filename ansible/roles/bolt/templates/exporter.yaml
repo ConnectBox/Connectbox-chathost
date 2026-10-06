@@ -5,7 +5,7 @@
 # interface: The interface translations for the Media Interface.  Duplicate the en for each supported lang.  Use the bolt_locale_code
 # for the key of each language
 exporter:
-  site_url: "https://bolt.{{ url }}/"
+  site_url: "{{ 'https' if use_https else 'http' }}://bolt.{{ url }}/"
   public_path: "/files/exports/"
   file_date_suffix: "m-d-Y-H-i"
   logo_public_path: "/files/logo.png"

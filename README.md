@@ -1,67 +1,54 @@
 # chathost
-Comprehensive Partner Support Services For Connectbox.  Ansible playbook for AWS EC2.
+Partner support server for ConnectBox: the **chathost** dashboard and APIs that boxes
+sync with, and **MediaBuilder** (Bolt CMS) for making OpenWell content packages.
+Built on one Ubuntu server with the Ansible playbook in `ansible/`.
 
-This project is related to Connectbox, a content delivery device
+This project is related to ConnectBox, a content delivery device.
 
 # Components
-* Dashboard with APIs (Developer Info: https://github.com/connectbox/chathost/tree/main/src)
-* nginx for Rocket, Chathost APIs
-* BoltCMS for content management
+* chathost - dashboard and box APIs (Node, Docker container on 127.0.0.1:2820), served at `https://chat.<domain>`
+* MediaBuilder - Bolt CMS with MySQL ([ConnectBox/mediabuilder](https://github.com/ConnectBox/mediabuilder), Docker, 127.0.0.1:3000), served at `https://bolt.<domain>`
+* nginx in front of both, with Let's Encrypt certificates (renewed automatically)
 
-# Building on AWS EC2
-* Quickstart Video: https://www.loom.com/share/48ad3da736d045198bc96c00d0efea3c?sharedAppSource=personal_library
-* Create a new, unused EC2 instance 
-* OS selection: Amazon Linux 2 AMI (HVM), SSD Volume Type (64-bit x86) 
-* Select Instance Type: Suggest T3 Large at $60 per month on demand or $360 per year plus data transfer
-* Step 3: Defaults
-* Step 4: Set to 32 Gigabytes or more
-* Step 5: Optional
-* Step 6: Create a security policy allowing the following ports: 22, 80, 443, 8000
-* Step 7: Confirm and Launch
-* Step 8: Use existing or create new SSH keys for the server. If creating new keys, be certain to download these keys to your computer.  You cannot do this later.
-* Step 9: After a few seconds, AWS will assign a public IP address, record this address for use in the Ansible instructions below
+# Building a server
 
-# Create AWS Certificate
-* Quickstart Video: https://www.loom.com/share/82916857b7934e49a4bfea21c7262a61?sharedAppSource=personal_library
-* Navigate to AWS ACM
-* Click Request Certificate button
-* Request a Public Certificate
-* Input the Domain Name That You're Using 
-* Select DNS Validation
-* After clicking "Confirm & Request" select the arrow and click the button called "Create Record In Route 53"
-* Wait a while.  AWS takes hours to process an ACM.  You can proceed with Load Balancer but you will need to only create the HTTP load balancer and add the HTTPS configuration later.
+**You need:** a fresh **Ubuntu 24.04** server (2 CPUs / 4 GB RAM / 30+ GB disk is a
+reasonable start) that you can reach over SSH as root or a sudo user; a domain; and a
+computer with Ansible (Linux, macOS or WSL).
 
-# Create AWS Applications Load Balancer
-* Quickstart Video 1: https://www.loom.com/share/e74550e9a4c842278cd00cd95008967f
-* Quickstart Video 2: https://www.loom.com/share/72949591909640a3b340ce01f43eb8d7
-* Follow the videos to point the load balancer at the chathost EC2 instance created above.
+1. **DNS:** create `chat.<domain>` and `bolt.<domain>` A records pointing at the server.
+   They must resolve before step 4 - the HTTPS certificates are requested for them.
+2. **Firewall:** allow inbound 22 (SSH), 80 and 443 only. The apps and MySQL listen on
+   localhost and are reached through nginx.
+3. **Configure** (in `ansible/`):
+   * `cp inventory.example inventory` and set the server's address, `ansible_user`,
+     `url=<domain>` and `email=<admin email>`.
+   * `cp secrets.example.yml secrets.yml` and fill in **new** values for `password`,
+     `bolt_app_secret` and `session_key` (letters/digits, 12+ characters; e.g.
+     `openssl rand -hex 16`). Both files are git-ignored; optionally
+     `ansible-vault encrypt secrets.yml`.
+4. **Run:** `ansible-playbook -i inventory site.yml` (add `--ask-vault-pass` if you
+   encrypted the secrets). The playbook stops early if the server is not Ubuntu
+   24.04+ or a secret is missing or still `CHANGE_ME`. Takes about 15-20 minutes.
+5. **First install only - initialise MediaBuilder's database** on the server:
+   `docker exec -it php bin/console bolt:setup` (answer **NO** to "Add fixtures") and
+   create Bolt's admin user when asked.
 
-# DNS
-* Quickstart Video: https://www.loom.com/share/a75228bff4474a9c887cbd7eaf5f3411?sharedAppSource=personal_library
-* Set hostname like moodle.yourorg.org to point to the IP of the EC2 instance
-* Set hostname like chat.yourorg.org to point to the ELB address
-* Set hostname like bolt.yourorg.org to point to the ELB address
-* These settings may take some time to propagate on the Internet and work as planned
-
-# Configuration via ansible
-* Install Ansible and GitHub Desktop on Mac or PC
-* Clone This Repo (Downloads it to your computer)
-* Navigate to ~/github/chathost/ansible 
-* Quickstart Video: https://www.loom.com/share/338170094a96420794cd62c15c0e6399?sharedAppSource=personal_library
-* Edit inventory file to set the hostname to moodle.yourorg.org or the hostname configured above
-* Run this command: `ansible-playbook -i inventory site.yml`
-* This will install needed components and launch.  Takes about 15 minutes
-* Verify Install: Video: https://www.loom.com/share/7dff0ba499f340ee83ecb9e92c6ec350?sharedAppSource=personal_library
+`use_https=false` in the inventory serves plain HTTP (only behind your own HTTPS load
+balancer). Re-running the playbook is safe; it updates both apps from GitHub.
 
 # Backup
-AWS Backup has a simple backup tool for EC2 instances.  Recommend the daily, monthly or daily, monthly, yearly backup plan.  Document: https://aws.amazon.com/blogs/aws/aws-backup-ec2-instances-efs-single-file-restore-and-cross-region-backup/
+Back up the MediaBuilder database (Docker volume `mediabuilder_db-data`, or
+`docker exec mysql mysqldump -u root -p bolt > bolt.sql`), the MediaBuilder uploads and
+exports (`/srv/connectbox/mediabuilder/public/files`) and chathost's state
+(`/srv/connectbox/chathost/src/state.json`). Snapshots from your cloud provider cover all of it.
 
 # Startup
-* In web browser, navigate to http://chat.yourorg.org and set up Rocketchat.
-  * Video: https://www.loom.com/share/2288f2598a3a4346b9d9e52b34b00eb6?sharedAppSource=personal_library
-* In web browser, navigate to http://chat.yourorg.org/dashboard and set up Dashboard.
-  * You must create user accounts in RocketChat (https://www.youtube.com/watch?v=4sTXuZ2q2Hg) and these users MUST have the roles of at least Leader or Admin to be allowed to connect to Dashboard.
-  * Video Intro for Dashboard: https://www.loom.com/share/58b8307e643443e2b9f8c7a847b586a6?sharedAppSource=personal_library
+* Open `https://chat.<domain>/dashboard` and sign in as `admin` with the `password` from
+  `secrets.yml`. Boxes that sync with this server (`server_url` on the box) appear here.
+* Open `https://bolt.<domain>` and sign in with the Bolt admin user from step 5 to build
+  content packages. Boxes list them under *Subscribe to Content Package* (see the
+  ConnectBox README, "OpenWell").
 
 # Usage
 * Teacher Setup

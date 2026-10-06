@@ -1,88 +1,59 @@
 ---
+# chathost: box sync APIs and dashboard (Node, in the node:16 container from
+# docker-compose.yml), listening on 127.0.0.1-reachable port 2820.
 
-- name: Install make to build node
-  package: 
-    name: gcc-c++, make
-    state: latest
-  when: ansible_user == 'ec2-user'
-  
-- name: Update repo for Node
-  get_url: 
-    url: https://rpm.nodesource.com/setup_14.x
-    dest: /tmp/setup_14.x
-    mode: "0775"
-  when: ansible_user == 'ec2-user'
-  
-- name: Install setup script
-  shell: /tmp/setup_14.x
-  when: ansible_user == 'ec2-user'
+- name: Install git and Node.js (Node runs the per-minute system.js health check)
+  apt:
+    name:
+      - git
+      - nodejs
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
 
-- name: Install the latest version of Node
-  package:
-    name: nodejs
-    state: latest
-  
-- name: Install the latest version of Git
-  package:
-    name: git
-    state: latest
+- name: Create the install directory
+  file:
+    path: "{{ document_root }}"
+    state: directory
+    mode: "0755"
 
-- name: Install Chathost repo
+- name: Install chathost repo
   git:
     repo: 'https://github.com/ConnectBox/connectbox-chathost.git'
-    dest: "{{ document_root }}/chathost"  # With git declar the final directory
-    clone: yes
+    dest: "{{ document_root }}/chathost"
+    version: main
     force: yes
     update: yes
 
-- name: Set Permissions of ~/chathost
-  ansible.builtin.file:
-    path: "{{ document_root }}/chathost"
-    recurse: yes
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
-    mode: '776'
+# npm runs inside the same node:16 image the app runs in, using the committed
+# package-lock.json (npm ci), so every server gets the same package versions.
+- name: Install node packages (npm ci in node:16)
+  command: >
+    docker run --rm -v {{ document_root }}/chathost:/usr/src -w /usr/src
+    node:16 npm ci --omit=dev
+  changed_when: true
 
-- name: Set data directory for Mongo
-  ansible.builtin.file:
-    path: "{{ document_root }}/data/db"
-    state: directory
-    owner: '{{ ansible_user }}'
-    group: '{{ ansible_user }}'
-    mode: '777'
-
-- name: Add the user 'nginx' 
-  ansible.builtin.user:
-    name: nginx
-#    uid: 101
-    group: '{{ ansible_user }}'
-
-- name: Install node packages based on package.json.
-  community.general.npm:
-    path: "{{ document_root }}/chathost"
-
-- name: Copy env to chathost directory
+- name: Write chathost .env (secrets from secrets.yml)
   template:
     src: env
     dest: "{{ document_root }}/chathost/.env"
+    mode: "0600"
 
-- name: Copy run_docker_compose to chathost directory
-  template:
-    src: run_docker_compose.sh
-    dest: "{{ document_root }}/chathost/run_docker_compose.sh"
-    mode: '775'
-    
-- name: Launch Dockers (docker-compose up -d)
-  command: 'sudo -u {{ ansible_user }} {{ document_root }}/chathost/run_docker_compose.sh &'
+- name: Start chathost (docker compose up -d)
+  command: docker compose up -d
+  args:
+    chdir: "{{ document_root }}/chathost"
+  changed_when: true
 
-- name: Check chathost container before continuing
+- name: Wait for chathost on port 2820
   wait_for:
-    host: "localhost"
+    host: localhost
     port: 2820
+    timeout: 120
 
-- name: Set cron for system health to run every minute
-  ansible.builtin.cron:
+- name: Run the system health check every minute
+  cron:
     name: "system.js"
     minute: "*"
-    user: '{{ ansible_user }}'
-    job: "/usr/bin/node {{ document_root }}/chathost/src/system.js >/tmp/systemjs.log 2&>1"
+    user: root
+    job: "cd {{ document_root }}/chathost && /usr/bin/node src/system.js >/tmp/systemjs.log 2>&1"
